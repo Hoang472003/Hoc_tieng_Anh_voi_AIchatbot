@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * { font-family: 'Inter', sans-serif; }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .message-animation { animation: slideInUp 0.3s ease-out; }
+        .typing-animation { animation: pulse 1.5s infinite; }
+        .send-button:hover { transform: scale(1.05); transition: all 0.2s ease; }
+
+        .floating-particles { position: absolute; width: 100%; height: 100%; overflow: hidden; z-index: 0; }
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+        }
+
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes float { 0% { transform: translateY(100vh) rotate(0deg); opacity: 0; } 10%,90% { opacity: 1; } 100% { transform: translateY(-100px) rotate(360deg); opacity: 0; } }
+
+        .message-bubble { max-width: 80%; word-wrap: break-word; }
+
+        .user-message { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; }
+        .bot-message { background: #f3f4f6; color: #111827; border: 1px solid #d1d5db; }
+        .bot-message-english { background: #fef3c7; color: #78350f; border: 1px solid #fde68a; }
+        .bot-message-vietnamese { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+        .bot-message-correction { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
+
+        .input-focus:focus {
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+            border-color: #0ea5e9;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen relative">
+
+    <!-- Floating Particles Background -->
+    <div class="floating-particles">
+        <div class="particle" style="left:10%; width:4px; height:4px; animation-delay:0s;"></div>
+        <div class="particle" style="left:20%; width:6px; height:6px; animation-delay:1s;"></div>
+        <div class="particle" style="left:30%; width:3px; height:3px; animation-delay:2s;"></div>
+        <div class="particle" style="left:40%; width:5px; height:5px; animation-delay:3s;"></div>
+        <div class="particle" style="left:50%; width:4px; height:4px; animation-delay:4s;"></div>
+        <div class="particle" style="left:60%; width:6px; height:6px; animation-delay:5s;"></div>
+        <div class="particle" style="left:70%; width:3px; height:3px; animation-delay:6s;"></div>
+        <div class="particle" style="left:80%; width:5px; height:5px; animation-delay:7s;"></div>
+        <div class="particle" style="left:90%; width:4px; height:4px; animation-delay:8s;"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🤖 AI Chat Assistant</h1>
+            <p class="text-blue-100 text-lg">Trò chuyện thông minh, trải nghiệm tuyệt vời</p>
+            <a href="/home" class="fixed top-4 left-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg font-medium transition-colors z-50">
+                ⬅️ Trang chủ
+            </a>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="max-w-4xl mx-auto chat-container rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Chat Header -->
+            <div class="bg-gradient-to-r from-sky-500 to-blue-600 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <span class="text-xl">🤖</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold">AI Teacher 😎</h3>
+                        <p class="text-sm text-blue-100">Đang hoạt động</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm font-medium">👤 <span id="usernameDisplay">User</span></span>
+                    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm shadow-md transition">Đăng xuất</button>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chatMessages" class="h-96 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50 to-white">
+                <div class="flex items-start space-x-3 message-animation">
+                    <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-sm">🤖</span>
+                    </div>
+                    <div class="message-bubble bot-message p-3 rounded-2xl rounded-tl-md shadow-sm">
+                        <p>Xin chào! Tôi là AI Assistant. Tôi có thể giúp gì cho bạn hôm nay? 😊</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="px-6 pb-2 hidden">
+                <div class="flex items-center space-x-2 text-gray-500">
+                    <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm">🤖</span>
+                    </div>
+                    <div class="typing-animation">
+                        <span class="text-sm">Đang soạn tin...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 bg-white border-t border-gray-200">
+                <form id="chatForm" class="flex space-x-3">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Nhập tin nhắn của bạn..." 
+                        class="flex-1 p-3 border border-gray-300 rounded-xl input-focus transition-all duration-200 outline-none"
+                        autocomplete="off"
+                    >
+                    <button type="submit" class="send-button bg-gradient-to-r from-sky-500 to-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-200 flex items-center space-x-2">
+                        <span>Gửi</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8">
+            <p class="text-blue-100 text-sm">Trải nghiệm chatbot thông minh</p>
+        </div>
+    </div>
+
+<script>
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const chatForm = document.getElementById('chatForm');
+    const typingIndicator = document.getElementById('typingIndicator');
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const username = localStorage.getItem("username");
+        const id_user = localStorage.getItem("id_user");
+        const role = localStorage.getItem("role") || "Người dùng";
+
+        if (!username || !id_user) {
+            alert("❌ Bạn chưa đăng nhập. Vui lòng login trước khi sử dụng tính năng này.");
+            window.location.href = "/"; 
+            return;
+        }
+
+        // Nếu đã login, hiển thị username
+        document.getElementById("usernameDisplay").textContent = username;
+    });
+
+    // Xử lý logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.clear();  // Xoá hết username, role, id_user
+        window.location.href = "/";
+    });
+
+    // Hàm thêm tin nhắn
+    function addMessage(message, isUser = false, customClass = null) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `flex items-start space-x-3 message-animation ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = `w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-sky-500' : 'bg-gray-400'}`;
+        avatar.innerHTML = `<span class="text-white text-sm">${isUser ? '👤' : '🤖'}</span>`;
+
+        const messageBubble = document.createElement('div');
+        let bubbleClass = isUser ? 'user-message' : 'bot-message';
+        if (customClass) bubbleClass = customClass;
+        messageBubble.className = `message-bubble ${bubbleClass} p-3 rounded-2xl ${isUser ? 'rounded-tr-md' : 'rounded-tl-md'} shadow-sm`;
+        messageBubble.innerHTML = `<p>${message}</p>`;
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(messageBubble);
+
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        typingIndicator.classList.remove('hidden');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        typingIndicator.classList.add('hidden');
+    }
+
+    // Gửi tin nhắn
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        addMessage(message, true);
+        messageInput.value = '';
+        showTypingIndicator();
+
+        const id_user = localStorage.getItem("id_user"); // ✅ lấy từ localStorage
+        if (!id_user) {
+            hideTypingIndicator();
+            addMessage("❌ Không tìm thấy ID User. Vui lòng đăng nhập lại.");
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:5000/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message, 
+                    id_user: parseInt(id_user) // ✅ ép kiểu int để backend nhận chuẩn
+                })
+            });
+
+            const data = await response.json();
+            hideTypingIndicator();
+
+            if (data.response_english) addMessage(data.response_english, false, 'bot-message-english');
+            if (data.explanation_vietnamese) addMessage(data.explanation_vietnamese, false, 'bot-message-vietnamese');
+            if (data.correction) addMessage("✅ Correction: " + data.correction, false, 'bot-message-correction');
+
+        } catch (err) {
+            hideTypingIndicator();
+            addMessage("❌ Lỗi khi kết nối chatbot: " + err.message);
+        }
+    });
+
+    // Enter để gửi tin nhắn
+    messageInput.focus();
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') chatForm.dispatchEvent(new Event('submit'));
+    });
+</script>
+</body>
+</html>

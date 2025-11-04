@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Learning Hub - Học tiếng Anh cùng AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; opacity: 0; transform: translateY(30px); }
+        .fade-in-delay-1 { animation-delay: 0.2s; }
+        .fade-in-delay-2 { animation-delay: 0.4s; }
+        .fade-in-delay-3 { animation-delay: 0.6s; }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        .gradient-bg { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%); }
+
+        .button-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .button-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04); }
+
+        .floating-animation { animation: floating 3s ease-in-out infinite; }
+        @keyframes floating { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+
+        .user-info { position: fixed; top: 1rem; right: 1rem; display: flex; align-items: center; gap: 0.5rem; z-index: 50; }
+        .logout-btn { background-color: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; box-shadow: 0 2px 6px rgba(0,0,0,0.2); transition: all 0.2s; }
+        .logout-btn:hover { background-color: #dc2626; }
+        .username-display { font-weight: 600; color: white; font-size: 0.975rem; }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-white opacity-5 rounded-full"></div>
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-white opacity-5 rounded-full"></div>
+    </div>
+
+    <!-- User Info + Logout -->
+    <div class="user-info">
+        <span class="username-display" id="usernameDisplay">Khách</span>
+        <button id="logoutBtn" class="logout-btn">Đăng xuất</button>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative min-h-screen flex flex-col items-center justify-center px-4 py-8">
+        <!-- Header Section -->
+        <div class="text-center mb-12 max-w-4xl mx-auto">
+            <h1 class="fade-in text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+                Chào mừng đến với
+                <span class="block bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent floating-animation">
+                    AI Learning Hub
+                </span>
+            </h1>
+            <p class="fade-in fade-in-delay-1 text-lg md:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+                Học tiếng Anh và trò chuyện cùng AI dễ dàng
+            </p>
+        </div>
+
+<!-- Main Action Buttons -->
+<div class="flex flex-col sm:flex-row gap-6 md:gap-8 w-full max-w-5xl mx-auto justify-center">
+    <!-- Button 1: Lesson -->
+    <a href="/lesson" class="fade-in fade-in-delay-2 flex-1 group">
+        <div class="button-hover bg-white text-blue-600 rounded-2xl p-8 md:p-10 text-center shadow-xl hover:shadow-2xl border border-blue-100">
+            <div class="text-4xl md:text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">🚀</div>
+            <h2 class="text-xl md:text-2xl font-bold mb-3">Làm bài tập cùng AI</h2>
+            <p class="text-blue-500 text-sm md:text-base opacity-80">
+                Học từ vựng, ngữ pháp với AI thông minh
+            </p>
+        </div>
+    </a>
+
+    <!-- Button 2: Voice AI (nổi bật) -->
+    <a href="/voice" class="fade-in fade-in-delay-3 flex-1 group">
+      <div class="button-hover bg-white text-blue-600 rounded-2xl p-8 md:p-10 text-center shadow-xl hover:shadow-2xl border border-blue-100">
+            <div class="text-4xl md:text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">🎤</div>
+            <h2 class="text-xl md:text-2xl font-bold mb-3">Trợ lý giọng nói AI</h2>
+            <p class="text-blue-500 text-sm md:text-base opacity-80">
+                Nói chuyện và luyện phát âm với AI
+            </p>
+        </div>
+    </a>
+
+    <!-- Button 3: Chatbot -->
+    <a href="/chatbot" class="fade-in fade-in-delay-4 flex-1 group">
+        <div class="button-hover bg-white text-blue-600 rounded-2xl p-8 md:p-10 text-center shadow-xl hover:shadow-2xl border border-blue-100">
+            <div class="text-4xl md:text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">💬</div>
+            <h2 class="text-xl md:text-2xl font-bold mb-3">Chatbot với AI</h2>
+            <p class="text-blue-500 text-sm md:text-base opacity-80">
+                Trò chuyện tự nhiên để luyện tiếng Anh
+            </p>
+        </div>
+    </a>
+</div>
+
+
+        <!-- Additional Info -->
+        <div class="fade-in fade-in-delay-3 mt-12 text-center">
+            <p class="text-blue-100 text-sm md:text-base opacity-75">
+                ✨ Được hỗ trợ bởi công nghệ AI tiên tiến ✨
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+            <p class="text-blue-200 text-xs opacity-60">
+                <!-- © 2024 AI Learning Hub. Tất cả quyền được bảo lưu. -->
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+        const username = localStorage.getItem("username");
+        const role = localStorage.getItem("role") || "Người dùng";
+
+        if (!username) {
+            alert("❌ Bạn chưa đăng nhập. Vui lòng login trước khi sử dụng tính năng này.");
+            window.location.href = "/"; // quay về trang login
+            return; // dừng các thao tác tiếp theo
+        }
+
+        // Nếu đã login, hiển thị username
+        document.getElementById("usernameDisplay").textContent = username;
+    });
+
+    // Xử lý logout
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            localStorage.removeItem("username");
+            window.location.href = "/";
+    });
+
+        // Mobile optimization
+        function adjustViewport() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        window.addEventListener('resize', adjustViewport);
+        window.addEventListener('orientationchange', adjustViewport);
+        adjustViewport();
+
+        document.querySelectorAll('a').forEach(link => {
+            link.addEventListener('touchstart', () => { link.style.transform = 'scale(0.98)'; });
+            link.addEventListener('touchend', () => { link.style.transform = ''; });
+        });
+
+        window.addEventListener('load', () => {
+            const buttons = document.querySelectorAll('.button-hover');
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', () => { button.style.willChange = 'transform, box-shadow'; });
+                button.addEventListener('mouseleave', () => { button.style.willChange = 'auto'; });
+            });
+        });
+    </script>
+</body>
+</html>
