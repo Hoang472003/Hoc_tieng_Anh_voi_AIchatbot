@@ -47,7 +47,7 @@ def create_table():
                 email VARCHAR(100) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL,
                 role ENUM('user','admin') DEFAULT 'user',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         print("✅ Bảng `users` đã sẵn sàng!")
@@ -62,8 +62,8 @@ def create_table():
     except Error as e:
         print("❌ Lỗi khi tạo bảng:", e)
 
-# Hàm tạo bảng lessons
-def create_lessons_table():
+# Hàm tạo bảng baihoc
+def create_baihoc_table():
     try:
         connection = mysql.connector.connect(
             host=DB_HOST,
@@ -75,19 +75,19 @@ def create_lessons_table():
         cursor = connection.cursor()
 
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS lessons (
-                id_lessons INT AUTO_INCREMENT PRIMARY KEY,
+            CREATE TABLE IF NOT EXISTS baihoc (
+                id_baihoc INT AUTO_INCREMENT PRIMARY KEY,
                 id_user INT NOT NULL,
-                topic VARCHAR(255) NOT NULL,
+                chu_de VARCHAR(255) NOT NULL,
                 model_ai VARCHAR(100) DEFAULT 'gemini 2.0',
-                data_lesson LONGTEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                noi_dung_baihoc LONGTEXT,
+                ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         """)
-        print("✅ Bảng `lessons` đã sẵn sàng!")
+        print("✅ Bảng `baihoc` đã sẵn sàng!")
     except Error as e:
-        print("❌ Lỗi khi tạo bảng lessons:", e)
+        print("❌ Lỗi khi tạo bảng baihoc:", e)
     finally:
         if connection.is_connected():
             cursor.close()
@@ -106,7 +106,7 @@ def create_table_ai_voice():
             CREATE TABLE IF NOT EXISTS AI_voice (
                 id_chat BIGINT AUTO_INCREMENT PRIMARY KEY,
                 id_user INT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 model_AI VARCHAR(100) DEFAULT 'gemini 2.0',
                 voice_user LONGTEXT,
                 voice_ai LONGTEXT,
@@ -137,7 +137,7 @@ def create_table_ai_chat():
             CREATE TABLE IF NOT EXISTS AI_chat (
                 id_chat BIGINT AUTO_INCREMENT PRIMARY KEY,
                 id_user INT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 model_AI VARCHAR(100) DEFAULT 'gemini 2.0',
                 chat_user LONGTEXT,
                 chat_ai LONGTEXT,
@@ -213,8 +213,8 @@ def login_user(email, password):
         print("❌ Lỗi khi kiểm tra user:", e)
         return None
 
-def insert_ai_lesson(id_user, topic, data_lesson, model_ai="gemini 2.0"):
-    """ lưu lại bài học của user vào bảng lessons """
+def insert_ai_lesson(id_user, chu_de, noi_dung_baihoc, model_ai="gemini 2.0"):
+    """ lưu lại bài học của user vào bảng baihoc """
     connection = connect_to_mysql()
     if connection is None:
         return False
@@ -222,12 +222,12 @@ def insert_ai_lesson(id_user, topic, data_lesson, model_ai="gemini 2.0"):
     try:
         cursor = connection.cursor()
         sql = """
-            INSERT INTO lessons (id_user, topic, model_ai, data_lesson)
+            INSERT INTO baihoc (id_user, chu_de, model_ai, noi_dung_baihoc)
             VALUES (%s, %s, %s, %s)
         """
-        cursor.execute(sql, (id_user, topic, model_ai, data_lesson))
+        cursor.execute(sql, (id_user, chu_de, model_ai, noi_dung_baihoc))
         connection.commit()
-        print(f"✅ Bài học mới đã được thêm cho user_id={id_user}, topic={topic}")
+        print(f"✅ Bài học mới đã được thêm cho user_id={id_user}, chu_de={chu_de}")
         return True
     except Error as e:
         print("❌ Lỗi khi thêm bài học:", e)
@@ -288,8 +288,8 @@ def insert_ai_voice(id_user, voice_user, voice_ai, model_ai="gemini 2.0"):
             cursor.close()
             connection.close()
 
-def count_all_user_lessons():
-    """Trả về danh sách {id_user, total_lessons} của tất cả user"""
+def count_all_user_baihoc():
+    """Trả về danh sách {id_user, total_baihoc} của tất cả user"""
     connection = connect_to_mysql()
     if connection is None:
         return []
@@ -297,15 +297,15 @@ def count_all_user_lessons():
     try:
         cursor = connection.cursor(dictionary=True)  # dùng dictionary để dễ map JSON
         sql = """
-            SELECT u.id AS id_user, u.username, COUNT(l.id_lessons) AS total_lessons
+            SELECT u.id AS id_user, u.username, COUNT(l.id_baihoc) AS total_baihoc
             FROM users u
-            LEFT JOIN lessons l ON u.id = l.id_user
+            LEFT JOIN baihoc l ON u.id = l.id_user
             GROUP BY u.id, u.username
-            ORDER BY total_lessons DESC
+            ORDER BY total_baihoc DESC
         """
         cursor.execute(sql)
         results = cursor.fetchall()
-        print("📊 Thống kê số topic của tất cả user:", results)
+        print("📊 Thống kê số chu_de của tất cả user:", results)
         return results
     except Error as e:
         print("❌ Lỗi khi thống kê bài học:", e)
@@ -447,7 +447,7 @@ def get_all_tables_data():
 #     # login_user("hoang123@gmail.com", "123456")
 #     create_table_ai_voice() # tạo bảng AI_voice
 #     create_table_ai_chat()  # tạo bảng AI_chat
-#     create_lessons_table() # Tạo bảng lessons
+#     create_baihoc_table() # Tạo bảng baihoc
 #     # insert_lesson(3, "súng ống", "Nội dung bài học về súng ống ")
     
 #     # # Thêm hội thoại text
@@ -456,4 +456,4 @@ def get_all_tables_data():
 #     # # Thêm hội thoại voice
 #     # insert_ai_voice(3, "hi, i am Hoang", "voice_ai_data_base64_or_text")
 #     # show_all_users()
-#     total_topics = count_all_user_lessons()
+#     total_chu_des = count_all_user_baihoc()
