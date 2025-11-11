@@ -87,95 +87,6 @@ def ad_lesson():
 def ad_query():
     return render_template("ad_query.html")
 
-#///////////////////////////////////////// AI Lesson TẠO BÀI HỌC //////////////////////////////////
-# API tạo bài học
-@app.route('/generate/lesson/<topic>', methods=["POST"])
-def generate_content(topic):
-    try:
-        # Lấy dữ liệu từ request JSON
-        data = request.get_json()
-        id_user = data.get("id_user")
-
-        if not id_user:
-            return jsonify({"error": "Thiếu id_user"}), 400
-
-        # Bước 1: Tạo bài học ban đầu từ AI
-        print(f"🚀 Bước 1: Tạo bài học ban đầu cho user {id_user}, chủ đề '{topic}'")
-        lesson_data = agent.generate("lesson", topic=topic)
-        content = lesson_data.get('content', '{}')
-        print("🔥 AI raw content:", content)
-
-        # --- parse JSON từ AI ---
-        try:
-            if "```json" in content:
-                start = content.find("```json") + 7
-                end = content.find("```", start)
-                if end != -1:
-                    json_str = content[start:end].strip()
-                    ai_json = json.loads(json_str)
-                else:
-                    ai_json = {"topic": topic}
-            elif "```" in content:
-                start = content.find("```") + 3
-                end = content.find("```", start)
-                if end != -1:
-                    json_str = content[start:end].strip()
-                    ai_json = json.loads(json_str)
-                else:
-                    ai_json = {"topic": topic}
-            else:
-                ai_json = json.loads(content)
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON Parse Error: {e}")
-            print(f"Raw content: {content}")
-            ai_json = {"topic": topic}
-
-        # Bước 2: Chuẩn hóa cấu trúc và tạo exercises mẫu
-        print("🔧 Bước 2: Chuẩn hóa cấu trúc và tạo exercises")
-        standardized_lesson = standardize_lesson(ai_json, topic)
-        print("✅ Standardized lesson JSON:", json.dumps(standardized_lesson, ensure_ascii=False, indent=2))
-
-        # Bước 3: Đưa bài học đã chuẩn hóa qua AI lần 2 để tối ưu hóa
-        print("🎯 Bước 3: Tối ưu hóa bài học qua AI")
-        lesson_json_str = json.dumps(standardized_lesson, ensure_ascii=False, indent=2)
-
-        final_lesson_data = agent.generate("finalize_lesson", lesson_data=lesson_json_str)
-        final_content = final_lesson_data.get('content', '{}')
-        print("🌟 AI final content:", final_content)
-
-        try:
-            if "```json" in final_content:
-                start = final_content.find("```json") + 7
-                end = final_content.find("```", start)
-                if end != -1:
-                    json_str = final_content[start:end].strip()
-                    final_result = json.loads(json_str)
-                else:
-                    raise json.JSONDecodeError("No closing ``` found", final_content, 0)
-            elif "```" in final_content:
-                start = final_content.find("```") + 3
-                end = final_content.find("```", start)
-                if end != -1:
-                    json_str = final_content[start:end].strip()
-                    final_result = json.loads(json_str)
-                else:
-                    raise json.JSONDecodeError("No closing ``` found", final_content, 0)
-            else:
-                final_result = json.loads(final_content)
-
-            print("🎉 Final lesson JSON:", json.dumps(final_result, ensure_ascii=False, indent=2))
-
-            # 🔹 có thể gọi insert_ai_lesson(id_user, json.dumps(final_result, ensure_ascii=False)) để lưu DB
-            insert_ai_lesson(id_user, topic,final_content, "gemini 2.5")
-
-            return jsonify(final_result)
-        except json.JSONDecodeError as e:
-            print(f"⚠️ AI không trả về JSON hợp lệ: {e}")
-            return jsonify(standardized_lesson)
-
-    except Exception as e:
-        print(f"❌ Error generating content: {str(e)}")
-        return jsonify({"error": str(e)}), 500
 
         
 #//////////////////////////////// AI CHATBOT DẠY HỌC ////////////////////////////////////////////////////
@@ -365,11 +276,6 @@ def api_show_all():
     return jsonify({"status": "success", "result": data})
 
 
-# API thông kê mức độ học tập user
-@app.route("/count_lessons_all", methods=["GET"])
-def api_count_all_user_lessons():
-    data = count_all_user_lessons()
-    return jsonify(data)
 
 
 #///////////////////////////////////////////////////////////////////////////////
