@@ -99,17 +99,37 @@ def chat():
     id_user = data.get("id_user")
 
     if not id_user or not student_input:
-        print ("❌ Thiếu id_user hoặc message")
         return jsonify({"error": "Thiếu id_user hoặc message"}), 400
 
-    chat_prompt = CHATBOT_PROMPT.replace("{student_input}", student_input)
+    # 🧠 Lấy lịch sử chat 5 câu gần nhất
+    history = get_chat_history(id_user, limit=5)
+    context = ""
+    for role, msg in history:
+        if role == "user":
+            context += f"Người học: {msg}\n"
+        else:
+            context += f"AI: {msg}\n"
+
+    # Tạo prompt gửi AI
+    chat_prompt = f"""
+{CHATBOT_PROMPT}
+
+Dưới đây là lịch sử hội thoại gần đây:
+{context}
+
+Người học nói: {student_input}
+"""
+
+    # Gọi AI
     response = agent.llm.invoke(chat_prompt)
-    print("Raw response:", response)
+    content = response.content.strip()
 
-    content = response.content
+    # Lưu cả 2 tin nhắn vào DB
+    save_message(id_user, "user", student_input)
+    save_message(id_user, "assistant", content)
+
+    # Xử lý JSON nếu cần
     cleaned = re.sub(r"```json\s*|\s*```|\*+", "", content).strip()
-    chat_ai = cleaned  # lưu tạm để insert DB
-
     try:
         parsed = json.loads(cleaned)
     except json.JSONDecodeError:
@@ -121,33 +141,7 @@ def chat():
         "correction": parsed.get("correction") or ""
     }
 
-    # 👉 Insert vào DB ngay khi chat
-    ok = insert_ai_chat(id_user, student_input, chat_ai, "gemini 1.5")
-    if not ok:
-        return jsonify({"error": "Không lưu được dữ liệu"}), 500
-
     return jsonify(result)
-
-
-#/////////////////////////// CHẠY ĐĂNG NHẬP mysql /////////////////////////
-
-# API đăng ký
-@app.route("/register", methods=["POST"])
-def register():
-    data = request.get_json()
-    username = data.get("username")
-    email = data.get("email")
-    password = data.get("password")
-   
-
-    if not username or not email or not password:
-        return jsonify({"status": "error", "message": "Thiếu thông tin đăng ký!"}), 400
-
-    success = insert_new_user(username, email, password)
-    if success:
-        return jsonify({"status": "success", "message": "Đăng ký thành công!"}), 201
-    else:
-        return jsonify({"status": "error", "message": "Email đã tồn tại hoặc lỗi khi đăng ký!"}), 400
 
 # API đăng nhập
 @app.route("/login", methods=["POST"])

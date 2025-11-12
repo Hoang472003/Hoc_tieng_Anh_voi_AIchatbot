@@ -176,21 +176,27 @@ def connect_to_mysql():
 
 # Hàm thêm user (mặc định role = user)
 def insert_new_user(username, email, password):
-    """Thêm user mới với role mặc định là 'user'."""
     connection = connect_to_mysql()
     if connection is None:
         return False
 
     try:
         cursor = connection.cursor()
+        # Kiểm tra trùng email
+        cursor.execute("SELECT COUNT(*) FROM users WHERE email = %s", (email,))
+        if cursor.fetchone()[0] > 0:
+            print(f"⚠️ Email '{email}' đã tồn tại trong hệ thống.")
+            return False
+
         sql = "INSERT INTO users (username, email, password, role) VALUES (%s, %s, %s, %s)"
-        cursor.execute(sql, (username, email, password, "user"))  # mặc định role = user
+        cursor.execute(sql, (username, email, password, "user"))
         connection.commit()
         print("✅ Thêm user mới thành công (role=user)!")
         return True
     except Error as e:
         print("❌ Lỗi khi thêm user:", e)
         return False
+
         
 # Hàm đăng nhập user
 def login_user(email, password):
@@ -437,6 +443,39 @@ def get_all_tables_data():
         if connection.is_connected():
             cursor.close()
             connection.close()
+
+# Lưu tin nhắn
+def save_message(id_user, role, message):
+    try:
+        conn = connect_to_mysql()
+        cursor = conn.cursor()
+        sql = "INSERT INTO chat_history (id_user, role, message) VALUES (%s, %s, %s)"
+        cursor.execute(sql, (id_user, role, message))
+        conn.commit()
+    except Exception as e:
+        print("❌ Lỗi lưu message:", e)
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+# Lấy lịch sử chat gần nhất
+def get_chat_history(id_user, limit=5):
+    history = []
+    try:
+        conn = connect_to_mysql()
+        cursor = conn.cursor()
+        sql = "SELECT role, message FROM chat_history WHERE id_user=%s ORDER BY created_at DESC LIMIT %s"
+        cursor.execute(sql, (id_user, limit))
+        rows = cursor.fetchall()
+        history = rows[::-1]  # đảo lại để chat cũ lên trước
+    except Exception as e:
+        print("❌ Lỗi lấy lịch sử:", e)
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+    return history
 
 
 # # Test
