@@ -1,5 +1,5 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
-from prompt import BASE_ROLE_PROMPT, PROMPTS, CHATBOT_PROMPT, VOICE_PROMPT
+from prompt import BASE_ROLE_PROMPT, PROMPTS, CHATBOT_PROMPT
 from dotenv import load_dotenv
 from flask import Flask, render_template, send_file, jsonify, request
 from flask_cors import CORS
@@ -274,8 +274,6 @@ def api_show_all():
     """API trả về toàn bộ dữ liệu database dưới dạng JSON"""
     data = get_all_tables_data()
     return jsonify({"status": "success", "result": data})
-
-
 
 
 #///////////////////////////////////////////////////////////////////////////////
