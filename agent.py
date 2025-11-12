@@ -91,7 +91,6 @@ def ad_query():
         
 #//////////////////////////////// AI CHATBOT DẠY HỌC ////////////////////////////////////////////////////
 
-
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.get_json()
@@ -124,16 +123,13 @@ Người học nói: {student_input}
     response = agent.llm.invoke(chat_prompt)
     content = response.content.strip()
 
-    # Lưu cả 2 tin nhắn vào DB
-    save_message(id_user, "user", student_input)
-    save_message(id_user, "assistant", content)
-
-    # Xử lý JSON nếu cần
+    # Loại bỏ các ký tự code block nếu AI trả về
     cleaned = re.sub(r"```json\s*|\s*```|\*+", "", content).strip()
     try:
         parsed = json.loads(cleaned)
     except json.JSONDecodeError:
-        parsed = {"response_english": cleaned}
+        # Nếu JSON lỗi, gói nguyên content vào response_english
+        parsed = {"response_english": cleaned, "explanation_vietnamese": "", "correction": ""}
 
     result = {
         "response_english": parsed.get("response_english") or "",
@@ -141,7 +137,17 @@ Người học nói: {student_input}
         "correction": parsed.get("correction") or ""
     }
 
+    # Chuyển newline thành <br> để hiển thị đúng trên HTML
+    for key in ["response_english", "explanation_vietnamese"]:
+        if result[key]:
+            result[key] = result[key].replace("\n", "<br>")
+
+    # Lưu cả 2 tin nhắn vào DB
+    save_message(id_user, "user", student_input)
+    save_message(id_user, "assistant", content)
+
     return jsonify(result)
+
 
 # API đăng nhập
 @app.route("/login", methods=["POST"])
